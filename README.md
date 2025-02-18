@@ -15,8 +15,8 @@ Cette application permet de surveiller les meilleures ventes de produits sportif
 ## Installation  
 1. **Cloner le projet**  
    ```bash
-   git clone https://github.com/votre-repo/moniteur-prix-amazon.git
-   cd moniteur-prix-amazon
+   git clone https://github.com/BandouFranck10/Scrapping/
+   cd monitor
    ```  
 
 2. **Créer un environnement virtuel**  
@@ -49,8 +49,8 @@ L'application sera accessible sur `http://localhost:8501/`.
 - Cliquez sur le bouton "📤 Exporter en CSV" pour sauvegarder les prix en local.
 
 ## Téléchargement  
-Vous pouvez télécharger ce projet en format ZIP en cliquant [ici](https://github.com/votre-repo/moniteur-prix-amazon/archive/refs/heads/main.zip).
+Vous pouvez télécharger ce projet en format ZIP en cliquant [ici](https://github.com/BandouFranck10/Scrapping/archive/refs/heads/main.zip).
 
 ## Auteurs  
-Développé par [Votre Nom]  
+Développé par [BANDOU Franck; FARAITINI Justin; LOUSSINGUI Merveille]  
 
