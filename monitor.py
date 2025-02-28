@@ -7,16 +7,20 @@ from email.mime.multipart import MIMEMultipart
 from bs4 import BeautifulSoup
 import os
 
+# Configuration des URLs
+CATEGORIES = {
+    "Sports": "https://www.amazon.fr/gp/bestsellers/sports",
+    "Jeux Vidéo": "https://www.amazon.fr/gp/bestsellers/videogames",
+    "Électronique": "https://www.amazon.fr/gp/bestsellers/electronics",
+}
+
 # Configuration de l'email
 EMAIL_SENDER = "tonemail@gmail.com"
 EMAIL_PASSWORD = "tonmotdepasse"
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
-# URL Amazon Bestsellers
-url = "https://www.amazon.fr/gp/bestsellers/sports"
-
-
+# Interface Streamlit
 st.set_page_config(page_title="Moniteur de prix Amazon", page_icon="📈", layout="wide")
 st.markdown("""
     <style>
@@ -35,10 +39,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<p class='big-title'>📊 Moniteur de prix Amazon</p>", unsafe_allow_html=True)
-st.markdown("<p class='small-text'>Suivez les meilleures ventes des produits sportifs et soyez informé des variations de prix !</p>", unsafe_allow_html=True)
+st.markdown("<p class='small-text'>Suivez les meilleures ventes et soyez informé des variations de prix !</p>", unsafe_allow_html=True)
+
+# Sélection de la catégorie
+category = st.selectbox("Choisissez une catégorie :", list(CATEGORIES.keys()))
+url = CATEGORIES[category]
 
 email_receiver = st.text_input("💌 Entrez l'adresse email pour les alertes :", "")
 
+# Fonction d'envoi d'email
 def send_email(product_name, old_price, new_price, email_receiver):
     if not email_receiver:
         st.warning("Veuillez entrer une adresse email valide.")
@@ -75,6 +84,7 @@ def send_email(product_name, old_price, new_price, email_receiver):
     except Exception as e:
         st.error(f"⚠️ Erreur lors de l'envoi de l'email : {e}")
 
+# Fonction de scraping
 def scrapp(url):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -88,17 +98,14 @@ def scrapp(url):
         st.error(f"Erreur lors de la récupération des données : {e}")
         return None
 
+# Extraction des données
 def extract_product(product_soup):
     try:
-        # Extraction du titre
+        # Sélecteurs par défaut pour les autres catégories
         title_element = product_soup.select_one("._cDEzb_p13n-sc-css-line-clamp-3_g3dy1") or \
-                       product_soup.select_one("div[class*='p13n-sc-truncate-']")
-        
-        # Extraction du prix
+                           product_soup.select_one("div[class*='p13n-sc-truncate-']")
         price_element = product_soup.select_one("._cDEzb_p13n-sc-price_3mJ9Z") or \
-                       product_soup.select_one("span.a-price > span.a-offscreen")
-        
-        # Extraction de la note
+                           product_soup.select_one("span.a-price > span.a-offscreen")
         rating_element = product_soup.select_one(".a-icon-row .a-icon-alt")
 
         if title_element:
@@ -121,14 +128,14 @@ def extract_product(product_soup):
 
             return {
                 "Titre": title,
-                "Prix": price,
-                "Note": rating
+                "Prix en €": price,
+                "Note": rating,
+                "Catégorie": category
             }
         return None
     except Exception as e:
         print(f"Erreur lors de l'extraction du produit : {e}")
         return None
-
 def update_data():
     soup = scrapp(url)
     if not soup:
@@ -156,36 +163,35 @@ def update_data():
     
     return new_data
 
+# Chargement des données précédentes
 def load_previous_prices():
     if os.path.exists("historique_prix.csv"):
         try:
             df = pd.read_csv("historique_prix.csv")
             if df.empty:
-                return pd.DataFrame(columns=["Titre", "Prix", "Note"])
+                return pd.DataFrame(columns=["Titre", "Prix en €", "Note", "Catégorie"])
             return df
         except (pd.errors.EmptyDataError, pd.errors.ParserError):
-            return pd.DataFrame(columns=["Titre", "Prix", "Note"])
+            return pd.DataFrame(columns=["Titre", "Prix en €", "Note", "Catégorie"])
         except Exception as e:
             st.error(f"Erreur lors de la lecture du fichier CSV : {e}")
-            return pd.DataFrame(columns=["Titre", "Prix", "Note"])
-    return pd.DataFrame(columns=["Titre", "Prix", "Note"])
+            return pd.DataFrame(columns=["Titre", "Prix en €", "Note", "Catégorie"])
+    return pd.DataFrame(columns=["Titre", "Prix en €", "Note", "Catégorie"])
 
-
-
-
+# Calcul des variations de prix
 def calculate_price_variations(current_data, previous_data):
     variations = []
     
     for current_item in current_data:
         title = current_item["Titre"]
-        current_price = current_item["Prix"]
+        current_price = current_item["Prix en €"]
         
         # Rechercher le produit dans les données précédentes
         previous_price = None
         if not previous_data.empty:
             product_history = previous_data[previous_data["Titre"] == title]
             if not product_history.empty:
-                previous_price = product_history.iloc[-1]["Prix"]
+                previous_price = product_history.iloc[-1]["Prix en €"]
         
         if previous_price is not None:
             variation = {
@@ -223,8 +229,8 @@ if update_button:
             st.subheader("📊 Prix actuels")
             st.dataframe(df)
             
-            if "Prix" in df.columns and not df["Prix"].isnull().all():
-                st.line_chart(df.set_index("Titre")["Prix"])
+            if "Prix en €" in df.columns and not df["Prix en €"].isnull().all():
+                st.line_chart(df.set_index("Titre")["Prix en €"])
 
 if show_history and hasattr(st.session_state, 'current_data'):
     previous_data = load_previous_prices()
