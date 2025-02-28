@@ -6,7 +6,7 @@
 Cette application permet de surveiller les meilleures ventes de produits sportifs sur Amazon et d'afficher les variations de prix. Une alerte par email peut être envoyée en cas de changement de prix.
 
 ## Fonctionnalités  
-- Scraping des prix des produits Amazon Bestsellers (Sports)  
+- Scraping des prix des produits Amazon Bestsellers (Sports, Jeux vidéo et Electronics)  
 - Affichage des données actuelles et des historiques de prix  
 - Graphique des variations de prix  
 - Export des données en CSV  
